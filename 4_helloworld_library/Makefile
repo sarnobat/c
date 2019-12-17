@@ -5,14 +5,13 @@
 
 
 # Make without any args executes "all"
-all:
-	helloworld
-hello:
-	helloworld.o
+all:	helloworld
+
+helloworld:	helloworld_obj
 	gcc -o helloworld helloworld.o -l json
-hello.o:
-	hello.c
+
+helloworld_obj:
 	gcc -c helloworld.c -l json
 
 clean:
-	rm helloworld.o helloworld
+	rm helloworld.o helloworld a.out

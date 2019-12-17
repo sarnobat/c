@@ -5,7 +5,7 @@ int main() {
 	 char * string = "{\"name\" : \"joys of programming\"}";
 	  json_object * jobj = json_tokener_parse(string);
 	   enum json_type type = json_object_get_type(jobj);
-	    printf("type: ",type);
+	    printf("type: %d",type);
 	     switch (type) {
 		      case json_type_null: printf("json_type_nulln");
 					    break;
