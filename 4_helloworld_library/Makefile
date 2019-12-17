@@ -9,10 +9,10 @@ all:
 	helloworld
 hello:
 	helloworld.o
-	gcc -o helloworld helloworld.o
+	gcc -o helloworld helloworld.o -l json
 hello.o:
 	hello.c
-	gcc -c helloworld.c
+	gcc -c helloworld.c -l json
 
 clean:
 	rm helloworld.o helloworld
