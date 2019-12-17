@@ -16,5 +16,5 @@ helloworld.o:
 	gcc -c helloworld.c helper.c
 clean:
 	rm helloworld.o 
-	rm helloworld 
 	rm helper.o
+	rm helloworld 
