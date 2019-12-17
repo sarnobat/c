@@ -8,10 +8,11 @@
 all:	helloworld
 
 helloworld:	helloworld_obj
+	# I believe this is dynamic linking, which I don't like.
 	gcc -o helloworld helloworld.o -l json
 
 helloworld_obj:
-	gcc -c helloworld.c -l json
+	gcc -c helloworld.c
 
 clean:
-	rm helloworld.o helloworld a.out
+	rm -f helloworld.o helloworld a.out
