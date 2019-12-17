@@ -1,3 +1,10 @@
+# Format:
+#
+# target: dependencies
+# 	system command(s)
+
+
+# Make without any args executes "all"
 all:
 	helloworld
 hello:
