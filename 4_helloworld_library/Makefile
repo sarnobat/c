@@ -9,7 +9,7 @@ all:	helloworld
 
 helloworld:	helloworld_obj
 	# I believe this is dynamic linking, which I don't like.
-	gcc -o helloworld helloworld.o -l json
+	gcc -o helloworld helloworld.o -l json -static
 
 helloworld_obj:
 	gcc -c helloworld.c
