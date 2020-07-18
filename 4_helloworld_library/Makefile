@@ -19,4 +19,4 @@ helloworld_obj:
 	gcc -c helloworld.c
 
 clean:
-	rm -f helloworld.o helloworld a.out
+	rm -f helloworld.o helloworld a.out helloworld_static
