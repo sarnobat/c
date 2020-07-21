@@ -6,19 +6,18 @@
 # sudo port install json-c
 
 # Make without any args executes "all"
-all:	helloworld helloworld_static
+all:	helloworld
 
 helloworld: helloworld_obj
-	# I believe this is dynamic linking, which I don't like.
-	gcc -o helloworld_static 	helloworld.o -l json
-	chown sarnobat helloworld_static
-
-helloworld_static:	helloworld_obj
-	gcc -o helloworld 		helloworld.o -l json -static
+	# this is dynamic linking, which I don't like.
+	gcc -o helloworld /opt/local/lib/libjson-c.dylib         -I/opt/local/lib        helloworld.o
+	chown sarnobat helloworld
 	rm helloworld.o
 
-helloworld_obj:
-	gcc -c helloworld.c
+helloworld_static:	helloworld_obj
+	echo "not supported"
 
+helloworld_obj:
+	gcc -c helloworld.c 	-I/opt/local/include
 clean:
-	rm -f helloworld.o helloworld a.out helloworld_static
+	rm -f helloworld.o helloworld a.out
