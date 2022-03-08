@@ -30,22 +30,25 @@ int main(int argc, char **argv)
 
     if (argc < 2) {
         printf("Usage: %s image.jpg\n", argv[0]);
-        printf("Displays tags potentially relating to ownership "
-                "of the image.\n");
         return 1;
     }
 
-    /* Load an ExifData object from an EXIF file */
     ed = exif_data_new_from_file(argv[1]);
-    if (!ed) {
+    if (ed) {
+		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MAKE);
+		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MODEL);
+		show_tag(ed, EXIF_IFD_0, EXIF_TAG_FILE_SOURCE);
+		show_tag(ed, EXIF_IFD_1, EXIF_TAG_FILE_SOURCE);
+		show_tag(ed, EXIF_IFD_0, EXIF_TAG_DOCUMENT_NAME);
+		show_tag(ed, EXIF_IFD_1, EXIF_TAG_DOCUMENT_NAME);
+		
+		/* Free the EXIF data */
+		exif_data_unref(ed);
+    } else {
         printf("File not readable or no EXIF data in file %s\n", argv[1]);
         return 2;
     }
-    show_tag(ed, EXIF_IFD_0, EXIF_TAG_MAKE);
-	show_tag(ed, EXIF_IFD_0, EXIF_TAG_MODEL);
 
-    /* Free the EXIF data */
-    exif_data_unref(ed);
 
     return 0;
 }
