@@ -1,8 +1,7 @@
-#include <json/json.h>
 #include <stdio.h>
+#include <json/json.h>
 
-int
-main ()
+int main ()
 {
   char *string = "{\"name\" : \"joys of programming\"}";
   json_object *jobj = json_tokener_parse (string);
