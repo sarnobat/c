@@ -35,6 +35,7 @@ int main(int argc, char **argv)
 
     ed = exif_data_new_from_file(argv[1]);
     if (ed) {
+    	printf("%s\n", argv[1]);
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MAKE);
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MODEL);
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_FILE_SOURCE);
