@@ -34,17 +34,6 @@ int main(int argc, char **argv)
     }
     ExifData *ed = exif_data_new_from_file(argv[1]);
     if (ed) {
-// //     	printf("%s\n", argv[1]);
-// 		ExifEntry *entry = exif_content_get_entry(ed->ifd[EXIF_IFD_0], EXIF_TAG_MAKE);
-// 		if (entry) {
-// 			char buf[1024];
-// 			/* Get the contents of the tag in human-readable form */
-// 			exif_entry_get_value(entry, buf, sizeof(buf));
-// 			/* Don't bother printing it if it's entirely blank */
-// 			if (*buf) {
-// // 				printf("%s:\t%s\t%s\n", exif_tag_get_name_in_ifd(EXIF_TAG_MAKE, EXIF_IFD_0), buf, argv[1]);
-// 			}
-// 		}
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MAKE, argv[1]);
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MODEL, argv[1]);
 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_FILE_SOURCE, argv[1]);
