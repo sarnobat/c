@@ -17,10 +17,10 @@ helloworld: helloworld_obj
 	rm helloworld.o
 	chown $(whoami) helloworld
 
-# Might be too difficult
+# Might be difficult
 # https://stackoverflow.com/a/3801032/714112
 helloworld_static:	helloworld_obj
-	echo "not supported"
+	echo "not supported yet"
 
 helloworld_obj:
 	gcc -c helloworld.c 	-I/opt/local/include
