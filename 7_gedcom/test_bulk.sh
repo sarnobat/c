@@ -1,0 +1,1 @@
+/Volumes/trash/trash/gedcom-parse-0.90.0/t/src/test_bulk.sh
