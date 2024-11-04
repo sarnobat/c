@@ -5,25 +5,6 @@
 #include <string.h>
 #include <libexif/exif-data.h>
 
-/* Show the tag name and contents if the tag exists */
-static void show_tag(ExifData *ed, ExifIfd ifd, ExifTag tag, char* filename)
-{
-    /* See if this tag exists */
-    ExifEntry *entry = exif_content_get_entry(ed->ifd[ifd],tag);
-    if (entry) {
-        char buf[1024];
-
-        /* Get the contents of the tag in human-readable form */
-        exif_entry_get_value(entry, buf, sizeof(buf));
-
-        /* Don't bother printing it if it's entirely blank */
-
-        if (*buf) {
-            printf("%-90s\t%-7s\t%s\n", filename, exif_tag_get_name_in_ifd(tag,ifd), buf);
-        }
-    }
-}
-
 int main(int argc, char **argv)
 {
 
@@ -41,7 +22,6 @@ int main(int argc, char **argv)
 
 		bool hasMake = false;
 		bool hasModel = false;
-// 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MAKE, argv[1]);
 		ExifIfd ifd = EXIF_IFD_0;
 
 		{
@@ -68,12 +48,6 @@ int main(int argc, char **argv)
 			printf("%-90s\t%-7s\t%s\n", filename, buf, buf2);
 			//printf("%-90s\t%-7s\t%s%s\n", filename, exif_tag_get_name_in_ifd(tag,ifd), buf, buf2);
 		}
-//		show_tag(ed, EXIF_IFD_0, EXIF_TAG_MODEL, argv[1]);
-// 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_FILE_SOURCE, argv[1]);
-// 		show_tag(ed, EXIF_IFD_1, EXIF_TAG_FILE_SOURCE, argv[1]);
-// 		show_tag(ed, EXIF_IFD_0, EXIF_TAG_DOCUMENT_NAME, argv[1]);
-// 		show_tag(ed, EXIF_IFD_1, EXIF_TAG_DOCUMENT_NAME, argv[1]);
-		
 		/* Free the EXIF data */
 		exif_data_unref(ed);
     } else {
