@@ -48,13 +48,11 @@ int main(int argc, char **argv)
 			printf("%-90s\t%-7s\t%s\n", filename, buf, buf2);
 			//printf("%-90s\t%-7s\t%s%s\n", filename, exif_tag_get_name_in_ifd(tag,ifd), buf, buf2);
 		}
-		/* Free the EXIF data */
-		exif_data_unref(ed);
+		exif_data_unref(ed); // Free the EXIF data
     } else {
         printf("File not readable or no EXIF data in file %s\n", argv[1]);
         return 2;
     }
-
-
+    
     return 0;
 }
