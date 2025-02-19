@@ -18,13 +18,13 @@ int main(int argc, char *argv[]) {
     pid_t pid = getpid();
     
     // Convert the PID to a string
-    char pid_string[20];
+    char pid_string[200];
     snprintf(pid_string, sizeof(pid_string), "You can debug ths process with: \nlldb -p %d", pid);
 
     // Create a new window
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(window), "PID Display");
-    gtk_window_set_default_size(GTK_WINDOW(window), 300, 100);
+    gtk_window_set_default_size(GTK_WINDOW(window), 900, 100);
 
     // Set the window's close button to exit the application
     g_signal_connect(window, "destroy", G_CALLBACK(on_window_close), NULL);
