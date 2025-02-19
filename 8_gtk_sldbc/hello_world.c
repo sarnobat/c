@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <unistd.h>  // For getpid()
 
-// Function to handle window close event
+// Function to handle window close event (destroy the window)
 static void on_window_close(GtkWidget *widget, gpointer data) {
-    gtk_main_quit();
+    gtk_main_quit();  // Exit the GTK main loop
 }
 
 int main(int argc, char *argv[]) {
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     
     // Convert the PID to a string
     char pid_string[20];
-    snprintf(pid_string, sizeof(pid_string), "Process ID: %d", pid);
+    snprintf(pid_string, sizeof(pid_string), "You can debug ths process with: \nlldb -p %d", pid);
 
     // Create a new window
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -36,8 +36,9 @@ int main(int argc, char *argv[]) {
     // Display the window
     gtk_widget_show_all(window);
 
-    // Run the GTK main event loop
+    // Run the GTK main event loop (this pauses execution until the window is closed)
     gtk_main();
 
+    // Code will not reach here until the window is closed, thanks to gtk_main()
     return 0;
 }
