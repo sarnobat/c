@@ -11,7 +11,7 @@ set -o errexit
 echo `date +%s::`"$0" >> ~/db.git/command_history.txt >> ~/db.git/command_history_timestamped.txt
 
 cat <<EOF | batcat --style=plain --paging=never --language sh --theme TwoDark
-See  /Volumes/git/github/2024/docker_images/bison_helloworld_c_cmake/src
+See /Volumes/git/github/2024/docker_images/bison_helloworld_c
 
 EOF
 
