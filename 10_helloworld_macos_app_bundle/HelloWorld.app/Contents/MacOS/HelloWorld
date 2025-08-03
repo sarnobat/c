@@ -1,3 +1,5 @@
 #!/bin/bash
 echo "Hello World"
-osascript -e 'display dialog "Hello World" buttons {"OK"} default button 1'
+# osascript -e 'display dialog "Hello World" buttons {"OK"} default button 1'
+osascript -e "display dialog \"$(cat "$(cd "$(dirname "$0")/../Resources" && pwd)/contents.txt")\" buttons {\"OK\"} default button 1"
+
