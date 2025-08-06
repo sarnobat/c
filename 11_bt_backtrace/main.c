@@ -5,6 +5,9 @@
 
 /* Obtain a backtrace and print it to stdout. */
 void print_trace(void) {
+
+// TODO:  try using to get function names /opt/homebrew/opt/llvm/bin/llvm-addr2line
+
   void *array[10];
   char **strings;
   int size, i;
