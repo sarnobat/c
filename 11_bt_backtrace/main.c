@@ -6,8 +6,6 @@
 /* Obtain a backtrace and print it to stdout. */
 void print_trace(void) {
 
-// TODO:  try using to get function names /opt/homebrew/opt/llvm/bin/llvm-addr2line
-
   void *array[10];
   char **strings;
   int size, i;
@@ -22,6 +20,7 @@ void print_trace(void) {
   }
 
   free(strings);
+  fprintf(stderr, "TODO 2025-08-06:  try using llvm-addr2line to get function names");
 }
 
 int main() { print_trace(); }
