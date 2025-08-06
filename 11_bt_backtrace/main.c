@@ -20,7 +20,8 @@ void print_trace(void) {
   }
 
   free(strings);
-  fprintf(stderr, "TODO 2025-08-06:  try using llvm-addr2line to get function names");
+  fprintf(stderr,
+          "TODO 2025-08-06:  try using llvm-addr2line to get function names");
 }
 
 int main() { print_trace(); }
