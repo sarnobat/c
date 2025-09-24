@@ -102,8 +102,7 @@ int main (int argc, char **argv) {
 			g_error_free(error);
 			continue;
 		}
-		char* result = g_regex_replace_literal(regex, input, -1,
-											   0, replace, 0, &error);
+		char* result = g_regex_replace_literal(regex, input, -1, 0, replace, 0, &error);
 		if (result == NULL) {
 			fprintf(stderr, "%s\n", error->message);
 			g_error_free(error);
