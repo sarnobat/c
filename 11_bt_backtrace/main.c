@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 /* Obtain a backtrace and print it to stdout. */
-void print_trace(void) {
+static void print_trace(void) {
 
   void *array[10];
   char **strings;
@@ -14,14 +14,17 @@ void print_trace(void) {
   strings = backtrace_symbols(array, size);
   if (strings != NULL) {
 
-    printf("Obtained %d stack frames.\n", size);
+    fprintf(stderr, "Obtained %d stack frames.\n", size);
     for (i = 0; i < size; i++)
-      printf("%s\n", strings[i]);
+      fprintf(stderr, "%s\n", strings[i]);
   }
 
   free(strings);
   fprintf(stderr,
-          "TODO 2025-08-06:  try using llvm-addr2line to get function names");
+          "TODO 2025-08-06:  try using llvm-addr2line to get function names\n");
 }
+
+// instead of the above, if you have it in another file
+extern void print_trace(void) ;
 
 int main() { print_trace(); }
