@@ -6,8 +6,8 @@ VERSION 	:=	2.84.4
 #/opt/homebrew/Cellar/glib/2.84.4/include/glib-2.0/glib.h
 
 build:
-	gcc -I/opt/local/include/ -I/opt/homebrew/Cellar/json-c/0.18/include/ -I\$(ROOT)/glib/\$(VERSION)/lib/glib-2.0/include/ -I\$(ROOT)/glib/\$(VERSION)/include/glib-2.0/ -c helloworld.c -o helloworld.o \
-		&& gcc -o helloworldc /opt/homebrew/Cellar/json-c/0.18/lib/libjson-c.dylib  helloworld.o
+	gcc -I/opt/local/include/ `pkg-config --cflags glib-2.0 json-c` -c helloworld.c -o helloworld.o \
+		&& gcc -o helloworldc `pkg-config --libs glib-2.0 json-c`  helloworld.o
 		
 
 run:
