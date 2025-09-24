@@ -121,8 +121,8 @@ int main (int argc, char **argv) {
 			ENTRY item1;
 			item1.key = line;
 			ENTRY *base1 = hsearch(item1, FIND);
-			printf("[%s] %6s %30s Replace  %s  in  %30s  by  %s :  %s \n",
-				   timeFormatted, prefix, base1->data, pattern, input, replace, result);
+			printf("[%s] %6s %p Replace %s in %s by %s : %s\n",
+			       timeFormatted, prefix, base1->data, pattern, input, replace, result);
 		} else {
 
 			///
