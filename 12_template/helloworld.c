@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <getopt.h>
 #include <glib.h>
-#include <json/json.h>
+#include <json-c/json.h>
 #include <regex.h>
 #include <search.h>
 #include <stdio.h>
