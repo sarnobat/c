@@ -6,6 +6,7 @@ PYCONFIG  := $(PFX)/bin/python$(PYMAJMIN)-config
 
 
 all: hello_embedded
+	./hello_embedded
 
 # notice the rule name is a file. That's great for reading code
 hello_embedded: main.c hello_py.h
@@ -20,7 +21,7 @@ hello_embedded: main.c hello_py.h
 hello_py.h: hello.py
 	xxd -i $< > $@
 
-/tmp/Python-3.12.5/libpython3.12.a:	init
+/tmp/Python-3.12.5/libpython3.12.a:	/tmp/Python-3.12.5
 	(test -d /tmp/pyout/ && exit 0) \
 	|| { cd /tmp/Python-3.12.5/ \
 	&& ./configure \
