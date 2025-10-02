@@ -7,6 +7,7 @@ PYCONFIG  := $(PFX)/bin/python$(PYMAJMIN)-config
 
 all: hello_embedded
 
+# notice the rule name is a file. That's great for reading code
 hello_embedded: main.c hello_py.h
 	clang -std=c11 -O2 \
 	      -mmacosx-version-min=14.7 \
@@ -19,9 +20,7 @@ hello_embedded: main.c hello_py.h
 hello_py.h: hello.py
 	xxd -i $< > $@
 
-
-
-interpreter:	init
+/tmp/Python-3.12.5/libpython3.12.a:	init
 	(test -d /tmp/pyout/ && exit 0) \
 	|| { cd /tmp/Python-3.12.5/ \
 	&& ./configure \
@@ -33,7 +32,7 @@ interpreter:	init
 	&& make install ; }\
 	&& find /tmp/Python-3.12.5/libpython3.12.a
 	
-init:
+/tmp/Python-3.12.5:
 	cd /tmp/ \
 	&& { ls Python-3.12.5.tgz || curl -LO https://www.python.org/ftp/python/3.12.5/Python-3.12.5.tgz ; } \
 	&& { test -d Python-3.12.5 || tar xf Python-3.12.5.tgz ; } \
