@@ -9,9 +9,11 @@ all: hello_embedded
 
 hello_embedded: main.c hello_py.h
 	clang -std=c11 -O2 \
+	      -mmacosx-version-min=14.7 \
 	      -I$(INCDIR) \
 	      main.c $(LIBA) \
 	      $$($(PYCONFIG) --embed --ldflags) \
+	      -mmacosx-version-min=14.7 \
 	      -o $@
 
 hello_py.h: hello.py
