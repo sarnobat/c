@@ -31,7 +31,11 @@ int main(void) {
     if (!strCls) { (*env)->ExceptionDescribe(env); goto done; }
     jobjectArray emptyArgs = (*env)->NewObjectArray(env, 0, strCls, NULL);
 
+
+    fprintf(stderr, "[trace] %10s:%-5d %32s() SRIDHAR calling java class file...\n", __FILE__, __LINE__, __func__);
     (*env)->CallStaticVoidMethod(env, cls, mid, emptyArgs);
+    fprintf(stderr, "[trace] %10s:%-5d %32s() SRIDHAR done\n", __FILE__, __LINE__, __func__);
+
     if ((*env)->ExceptionCheck(env)) { (*env)->ExceptionDescribe(env); }
 
 done:
