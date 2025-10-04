@@ -39,7 +39,10 @@ int main(int argc, char **argv) {
     }
 
     // Call main()
+     fprintf(stderr, "[trace] %10s:%-5d %32s() SRIDHAR calling java class file...\n", __FILE__, __LINE__, __func__);
     (*env)->CallStaticVoidMethod(env, cls, mid, NULL);
+     fprintf(stderr, "[trace] %10s:%-5d %32s() SRIDHAR done\n", __FILE__, __LINE__, __func__);
+
 
     // Destroy the JVM
     (*jvm)->DestroyJavaVM(jvm);

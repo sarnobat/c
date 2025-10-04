@@ -7,3 +7,6 @@ build:
 
 clean:
 	rm -f hello
+
+run:
+	./hello
