@@ -6,8 +6,8 @@ build:
 	      hello.c -o hello \
 	      -L"`/usr/libexec/java_home`/lib/server" -ljvm
 
-clean:
-	rm -f hello
-
-run:
+run: build
 	./hello
+
+clean:
+	rm -f hello HelloWorld.class HelloWorld.jar
