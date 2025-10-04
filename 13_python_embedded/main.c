@@ -27,8 +27,8 @@ int main(int argc, char **argv) {
     memcpy(buf, hello_py, hello_py_len);
     buf[hello_py_len] = '\0';
 
-	fprintf(stderr, "[%s:%-5d]\t%s() SRIDHAR running Python script...\n", __FILE__, __LINE__, __func__);
-    int rc = PyRun_SimpleString(buf);  // run the script
+    fprintf(stderr, "[%s:%-5d]\t%s() SRIDHAR running Python script...\n", __FILE__, __LINE__, __func__);
+    int rc = PyRun_SimpleString(buf /* const char *command */);  // run the script
     fprintf(stderr, "[%s:%-5d]\t%s() SRIDHAR finished Python script\n", __FILE__, __LINE__, __func__);
 	free(buf);
 
