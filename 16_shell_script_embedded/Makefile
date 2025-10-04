@@ -1,4 +1,4 @@
-DASH_DIR := dash
+DASH_DIR := /tmp/dash
 
 
 # Final binary (link all .o files including main.o)
