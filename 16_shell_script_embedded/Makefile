@@ -1,5 +1,16 @@
 DASH_DIR := dash
 
+
+# Final binary (link all .o files including main.o)
+hello: hello.c hello_sh.h $(DASH_DIR)/src/dash
+	clang -I$(DASH_DIR)/src \
+	      hello.c \
+	      $(wildcard $(DASH_DIR)/src/*.o) \
+	      $(wildcard $(DASH_DIR)/src/*/*.o) \
+	      -o $@
+	echo "Ironically, this is more complex than doing the equivalent in java or python"      
+
+
 # Configure dash
 $(DASH_DIR)/config.status:
 	test -d $(DASH_DIR) || git clone https://git.kernel.org/pub/scm/utils/dash/dash.git $(DASH_DIR)
@@ -12,14 +23,6 @@ $(DASH_DIR)/src/dash: $(DASH_DIR)/config.status
 # hello.sh → hello_sh.h
 hello_sh.h: hello.sh
 	xxd -i hello.sh > $@
-
-# Final binary (link all .o files including main.o)
-hello: hello.c hello_sh.h $(DASH_DIR)/src/dash
-	clang -I$(DASH_DIR)/src \
-	      hello.c \
-	      $(wildcard $(DASH_DIR)/src/*.o) \
-	      $(wildcard $(DASH_DIR)/src/*/*.o) \
-	      -o $@
 
 run: hello
 	./hello
