@@ -6,6 +6,7 @@ PYCONFIG  := $(PFX)/bin/python$(PYMAJMIN)-config
 
 
 all: hello_embedded
+	echo "Cython is another option for non-trivial cases if you can't get it working manually"
 	./hello_embedded
 
 # notice the rule name is a file. That's great for reading code
