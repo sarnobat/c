@@ -7,6 +7,9 @@ METALLIB  := xcrun -sdk macosx metallib
 CLANG     := clang
 CFLAGS    := -framework Metal -framework Foundation -fobjc-arc -isysroot $(SDK)
 
+run: $(APP)
+	$(APP) | tee main.c.log
+
 $(BUILD):
 	mkdir -p $(BUILD)
 
@@ -19,8 +22,6 @@ $(BUILD)/hello.metallib: $(BUILD)/hello.air
 $(APP): main.c $(BUILD)/hello.metallib | $(BUILD)
 	$(CLANG) -x objective-c $(CFLAGS) $< -o $@
 
-run: $(APP)
-	$(APP)
 
 clean:
 	rm -rf $(BUILD)
