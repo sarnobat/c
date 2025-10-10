@@ -1,4 +1,4 @@
 build:
 	gcc -o hashgnu hashgnu.c `pkg-config --cflags --libs glib-2.0`
 	gcc -o hashposix hashposix.c
-	gcc list.c -o list
+	gcc listgnu.c -o listgnu
