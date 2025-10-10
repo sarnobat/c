@@ -3,7 +3,7 @@ CFLAGS = -Wall -g
 GLIB_FLAGS = `pkg-config --cflags --libs glib-2.0`
 
 # Source files
-GNU_SOURCES = hashgnu.c listgnu.c
+GNU_SOURCES = hashgnu.c listgnu.c treegnu.c
 POSIX_SOURCES = hashposix.c listposix.c treeposix.c
 
 # Executables (strip .c extension)
