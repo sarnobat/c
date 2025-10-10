@@ -4,90 +4,134 @@
 #include <Metal/Metal.h>
 
 int main(void) {
-    // ------------------------------------------------------------
-    // 1. Create a Metal device (like choosing a CUDA GPU)
-    // ------------------------------------------------------------
     @autoreleasepool {
-        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-        if (!device) {
-            fprintf(stderr, "No Metal device found\n");
-            return 1;
+        printf("=== Metal Hello Debug ===\n");
+
+        // ------------------------------------------------------------
+        // 1. Enumerate all Metal devices visible to this process
+        // ------------------------------------------------------------
+        NSArray *allDevices = MTLCopyAllDevices();
+        NSUInteger count = [allDevices count];
+        printf("MTLCopyAllDevices() -> %lu device(s)\n", (unsigned long)count);
+        for (NSUInteger i = 0; i < count; i++) {
+            id<MTLDevice> d = [allDevices objectAtIndex:i];
+            printf("  [%lu] %s\n", (unsigned long)i, d.name.UTF8String);
+            printf("       lowPower: %s  removable: %s  headless: %s\n",
+                   d.isLowPower ? "yes" : "no",
+                   d.isRemovable ? "yes" : "no",
+                   d.isHeadless ? "yes" : "no");
+            printf("       registryID: 0x%llx\n", d.registryID);
         }
 
         // ------------------------------------------------------------
-        // 2. Load compiled Metal library (similar to loading a PTX/CUBIN)
+        // 2. Try to get the system default device first
+        // ------------------------------------------------------------
+        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+        if (!device && count > 0) {
+            printf("⚙️  MTLCreateSystemDefaultDevice() returned nil; "
+                   "falling back to first enumerated device.\n");
+            device = [allDevices objectAtIndex:0];
+        }
+
+        if (!device) {
+            fprintf(stderr, "❌  No usable Metal device available.\n");
+            return 1;
+        }
+
+        printf("✅ Using device: %s\n", device.name.UTF8String);
+
+        // ------------------------------------------------------------
+        // 3. Create a command queue (like a CUDA stream)
+        // ------------------------------------------------------------
+        id<MTLCommandQueue> queue = [device newCommandQueue];
+        if (!queue) {
+            fprintf(stderr, "❌  Failed to create command queue.\n");
+            return 1;
+        }
+        printf("✅ Command queue created.\n");
+
+        // ------------------------------------------------------------
+        // 4. Load compiled Metal library (.metallib)
         // ------------------------------------------------------------
         NSError *err = nil;
         id<MTLLibrary> lib = [device newLibraryWithFile:@"build/hello.metallib" error:&err];
         if (!lib) {
-            fprintf(stderr, "Library load failed: %s\n", err.localizedDescription.UTF8String);
+            fprintf(stderr, "❌  Failed to load build/hello.metallib: %s\n",
+                    err ? err.localizedDescription.UTF8String : "(unknown error)");
             return 1;
         }
+        printf("✅ Library loaded successfully.\n");
 
         // ------------------------------------------------------------
-        // 3. Get the kernel function entry point ("hello" kernel)
+        // 5. Load kernel function "hello"
         // ------------------------------------------------------------
         id<MTLFunction> fn = [lib newFunctionWithName:@"hello"];
         if (!fn) {
-            fprintf(stderr, "Function 'hello' not found.\n");
+            fprintf(stderr, "❌  Kernel function 'hello' not found.\n");
             return 1;
         }
+        printf("✅ Kernel function 'hello' found.\n");
 
         // ------------------------------------------------------------
-        // 4. Create a pipeline (like building a CUDA kernel launch configuration)
+        // 6. Create compute pipeline
         // ------------------------------------------------------------
         id<MTLComputePipelineState> pso = [device newComputePipelineStateWithFunction:fn error:&err];
         if (!pso) {
-            fprintf(stderr, "Pipeline creation failed: %s\n", err.localizedDescription.UTF8String);
+            fprintf(stderr, "❌  Failed to create compute pipeline: %s\n",
+                    err ? err.localizedDescription.UTF8String : "(unknown)");
             return 1;
         }
+        printf("✅ Compute pipeline ready.\n");
 
         // ------------------------------------------------------------
-        // 5. Allocate a shared buffer (like cudaMallocManaged)
+        // 7. Allocate output buffer (shared memory)
         // ------------------------------------------------------------
         const size_t bufSize = 256;
         id<MTLBuffer> buf = [device newBufferWithLength:bufSize options:MTLResourceStorageModeShared];
         if (!buf) {
-            fprintf(stderr, "Failed to create buffer\n");
+            fprintf(stderr, "❌  Failed to create buffer.\n");
+            return 1;
+        }
+        printf("✅ Shared buffer created (%zu bytes).\n", bufSize);
+
+        // ------------------------------------------------------------
+        // 8. Create and encode command buffer
+        // ------------------------------------------------------------
+        id<MTLCommandBuffer> cb = [queue commandBuffer];
+        if (!cb) {
+            fprintf(stderr, "❌  Failed to create command buffer.\n");
             return 1;
         }
 
-        // ------------------------------------------------------------
-        // 6. Create a command queue and command buffer
-        //    (like CUDA streams and launch queues)
-        // ------------------------------------------------------------
-        id<MTLCommandQueue> q = [device newCommandQueue];
-        id<MTLCommandBuffer> cb = [q commandBuffer];
-
-        // ------------------------------------------------------------
-        // 7. Create a compute command encoder (like a kernel launch context)
-        // ------------------------------------------------------------
         id<MTLComputeCommandEncoder> enc = [cb computeCommandEncoder];
+        if (!enc) {
+            fprintf(stderr, "❌  Failed to create compute encoder.\n");
+            return 1;
+        }
 
-        // Bind the pipeline and the buffer to argument index 0
         [enc setComputePipelineState:pso];
         [enc setBuffer:buf offset:0 atIndex:0];
 
-        // ------------------------------------------------------------
-        // 8. Launch 1 thread (like <<<1,1>>>)
-        // ------------------------------------------------------------
         MTLSize threadsPerGrid = MTLSizeMake(1, 1, 1);
         MTLSize threadsPerTG   = MTLSizeMake(1, 1, 1);
         [enc dispatchThreads:threadsPerGrid threadsPerThreadgroup:threadsPerTG];
-
-        // Finish encoding GPU commands
         [enc endEncoding];
 
-        // ------------------------------------------------------------
-        // 9. Submit and wait for completion (synchronous)
-        // ------------------------------------------------------------
+        printf("🚀 Dispatching GPU work...\n");
         [cb commit];
         [cb waitUntilCompleted];
+        printf("✅ GPU work completed.\n");
 
         // ------------------------------------------------------------
-        // 10. Read the result from the shared buffer
+        // 9. Read the result
         // ------------------------------------------------------------
-        printf("%s\n", (char*)buf.contents);
+        const char *result = (const char *)buf.contents;
+        if (result && result[0])
+            printf("Result buffer: \"%s\"\n", result);
+        else
+            printf("⚠️  Result buffer empty or not written.\n");
+
+        printf("=== Metal Hello Complete ===\n");
     }
 
     return 0;
