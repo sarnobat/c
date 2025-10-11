@@ -1,0 +1,55 @@
+                         ┌───────────────────────────────────────┐
+                         │           HOST (C program)            │
+                         └───────────────────────────────────────┘
+
+        ┌────────┐        ┌────────┐        ┌────────┐
+        │  A[M×K]│        │  B[K×N]│        │  C[M×N]│
+        └───┬────┘        └───┬────┘        └───┬────┘
+            │                 │                 │
+            │                 │                 │
+            ▼                 ▼                 ▼
+      ┌────────────┐     ┌────────────┐     ┌────────────┐
+      │  bufA      │     │  bufB      │     │  bufC      │
+      │ (MTLBuffer)│     │ (MTLBuffer)│     │ (MTLBuffer)│
+      └────┬───────┘     └────┬───────┘     └────┬───────┘
+           │                  │                  │
+           │                  │                  │
+           ▼                  ▼                  ▼
+   ┌────────────────────────────────────────────────────────────┐
+   │                 GPU / DEVICE CONTEXT                       │
+   │  (MTLDevice → CommandQueue → CommandBuffer → Encoder)      │
+   └────────────────────────────────────────────────────────────┘
+           │                  │                  │
+           │ setBuffer(0..5)  │                  │
+           ▼                  ▼                  ▼
+ ┌───────────────────────────────────────────────────────────────┐
+ │                     Metal Kernel: matmul                      │
+ │---------------------------------------------------------------│
+ │  Inputs:                                                      │
+ │     device float* A  ←── bufA                                 │
+ │     device float* B  ←── bufB                                 │
+ │     device float* C  ←── bufC                                 │
+ │     constant uint& M ←── bufM                                 │
+ │     constant uint& N ←── bufN                                 │
+ │     constant uint& K ←── bufK                                 │
+ │                                                               │
+ │  Each thread gets: gid.x (column), gid.y (row)                │
+ │                                                               │
+ │  sum = 0                                                      │
+ │  for (k = 0; k < K; k++)                                      │
+ │      sum += A[row*K + k] * B[k*N + col];                      │
+ │  C[row*N + col] = sum;                                        │
+ └───────────────────────────────────────────────────────────────┘
+           │
+           │ GPU writes results into bufC (shared memory)
+           ▼
+      ┌────────────┐
+      │  bufC      │
+      │ (shared)   │
+      └────┬───────┘
+           │ memcpy / direct access
+           ▼
+        ┌────────┐
+        │  C_host│
+        │ (M×N)  │
+        └────────┘
