@@ -29,11 +29,3 @@ $(BIN): $(SRC)
 
 clean:
 	rm -f $(BIN)
-
-# build:
-# 	rsync -a -v /Volumes/git/src.git/2021/c/2019_opengl/main.c .
-# 	gcc main.c 
-	
-init:
-	brew install glfw glew
-	
