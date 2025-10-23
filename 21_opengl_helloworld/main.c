@@ -1,40 +1,49 @@
+#define GL_SILENCE_DEPRECATION
+
 #include <GLUT/glut.h>
 #include <stdio.h>
 
-/*
-Obtained from:
-http://www.dgp.toronto.edu/~ah/csc418/fall_2001/tut/square 
-*/
-void display(void)  { 
-	glClear( GL_COLOR_BUFFER_BIT );
-	glColor3f(0, 1, 0);
-	glBegin(GL_POLYGON);
-		glVertex3f(2, 4, 0);
-		glVertex3f(8, 4, 0);
-		glVertex3f(8, 6, 0);
-		glVertex3f(2, 6, 0);
-	glEnd();
-	glFlush();
+// Vertex positions for a single square
+float vertices[][3] = {
+    {2.0f, 4.0f, 0.0f},
+    {8.0f, 4.0f, 0.0f},
+    {8.0f, 6.0f, 0.0f},
+    {2.0f, 6.0f, 0.0f}
+};
+
+// Display callback
+void display(void) {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glColor3f(0.0f, 1.0f, 0.0f);
+
+    // Draw a square using vertex array (still works in compatibility profile)
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(3, GL_FLOAT, 0, vertices);
+    glDrawArrays(GL_QUADS, 0, 4);
+    glDisableClientState(GL_VERTEX_ARRAY);
+
+    glutSwapBuffers();
 }
 
-int main(int argc, char **argv) 
-{ 
-	printf("main() - begin\n");
-	glutInit(&argc, argv);
-	glutInitDisplayMode ( GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
+int main(int argc, char **argv) {
+    printf("main() - begin\n");
 
-	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(300, 300);
-	glutCreateWindow ("square");
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowPosition(100, 100);
+    glutInitWindowSize(300, 300);
+    glutCreateWindow("Modern Square");
 
-	glClearColor(0, 0, 0, 0);     // black background 
-	glMatrixMode(GL_PROJECTION);  // setup viewing projection 
-	glLoadIdentity();             // start with identity matrix 
-	glOrtho(0, 10, 0, 10, -1, 1); // setup a 10x10x2 viewing world
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
-	glutDisplayFunc(  display  );
-	glutMainLoop();
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, 10, 0, 10, -1, 1);
 
-	printf("main() - end\n");
-	return 0;
+    glutDisplayFunc(display);
+    glutMainLoop();
+
+    printf("main() - end\n");
+    return 0;
 }
