@@ -41,10 +41,16 @@ else
     endif
 endif
 
+run:
+	./$(BIN) data.csv
+	
+	
+build:	$(BIN)
+	
+	
 # === Build target ===
 $(BIN): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-	./$(BIN) data.csv
 	
 # === Clean target ===
 clean:
