@@ -44,7 +44,8 @@ endif
 # === Build target ===
 $(BIN): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-
+	./$(BIN) data.csv
+	
 # === Clean target ===
 clean:
 	rm -f $(BIN)
