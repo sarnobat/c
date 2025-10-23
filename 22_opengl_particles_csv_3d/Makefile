@@ -17,6 +17,7 @@ GLEW_INCLUDE = $(BREW_PREFIX)/include
 GLEW_LIB     = $(BREW_PREFIX)/lib
 GLFW_INCLUDE = $(BREW_PREFIX)/include
 GLFW_LIB     = $(BREW_PREFIX)/lib
+GLU_LIB      = $(BREW_PREFIX)/lib
 
 # === Flags setup ===
 ifeq ($(USE_GLUT),1)
@@ -24,34 +25,32 @@ ifeq ($(USE_GLUT),1)
     ifneq ($(shell pkg-config --exists glew && echo yes),yes)
         # fallback to Homebrew paths
         CFLAGS  += -I$(GLEW_INCLUDE)
-        LDFLAGS += -L$(GLEW_LIB) -lGLEW -framework GLUT -framework OpenGL
+        LDFLAGS += -L$(GLEW_LIB) -lGLEW -framework GLUT -framework OpenGL -lGLU
     else
         CFLAGS  += $(shell pkg-config --cflags glew)
-        LDFLAGS += $(shell pkg-config --libs glew) -framework GLUT -framework OpenGL
+        LDFLAGS += $(shell pkg-config --libs glew) -framework GLUT -framework OpenGL -lGLU
     endif
 else
     # GLFW + GLEW
     ifneq ($(shell pkg-config --exists glew glfw3 && echo yes),yes)
         # fallback to Homebrew paths
         CFLAGS  += -I$(GLEW_INCLUDE) -I$(GLFW_INCLUDE)
-        LDFLAGS += -L$(GLEW_LIB) -lGLEW -L$(GLFW_LIB) -lglfw -framework OpenGL
+        LDFLAGS += -L$(GLEW_LIB) -lGLEW -L$(GLFW_LIB) -lglfw -framework OpenGL -L$(GLU_LIB) -lGLU
     else
         CFLAGS  += $(shell pkg-config --cflags glew glfw3)
-        LDFLAGS += $(shell pkg-config --libs glew glfw3) -framework OpenGL
+        LDFLAGS += $(shell pkg-config --libs glew glfw3) -framework OpenGL -lGLU
     endif
 endif
 
 run:	build
 	./$(BIN) data.csv
-	
-	
+
 build:	$(BIN)
-	
-	
+
 # === Build target ===
 $(BIN): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
-	
+
 # === Clean target ===
 clean:
 	rm -f $(BIN)
