@@ -1,10 +1,9 @@
-// Simple OpenGL 3D particle viewer
+// Simple OpenGL 3D particle viewer with visible bounding box
 // Usage: ./particles data.csv
 // Each line of data.csv: "x,y,z"
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <math.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -16,7 +15,6 @@ typedef struct {
 static Point *points = NULL;
 static size_t point_count = 0;
 
-// Bounding box for camera positioning
 typedef struct {
     float minX, maxX;
     float minY, maxY;
@@ -66,6 +64,29 @@ static void error_callback(int error, const char *desc) {
     fprintf(stderr, "GLFW error: %s\n", desc);
 }
 
+// Draw red bounding box edges
+static void draw_bounding_box(Bounds b) {
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+    // Bottom rectangle
+    glVertex3f(b.minX,b.minY,b.minZ); glVertex3f(b.maxX,b.minY,b.minZ);
+    glVertex3f(b.maxX,b.minY,b.minZ); glVertex3f(b.maxX,b.minY,b.maxZ);
+    glVertex3f(b.maxX,b.minY,b.maxZ); glVertex3f(b.minX,b.minY,b.maxZ);
+    glVertex3f(b.minX,b.minY,b.maxZ); glVertex3f(b.minX,b.minY,b.minZ);
+    // Top rectangle
+    glVertex3f(b.minX,b.maxY,b.minZ); glVertex3f(b.maxX,b.maxY,b.minZ);
+    glVertex3f(b.maxX,b.maxY,b.minZ); glVertex3f(b.maxX,b.maxY,b.maxZ);
+    glVertex3f(b.maxX,b.maxY,b.maxZ); glVertex3f(b.minX,b.maxY,b.maxZ);
+    glVertex3f(b.minX,b.maxY,b.maxZ); glVertex3f(b.minX,b.maxY,b.minZ);
+    // Vertical edges
+    glVertex3f(b.minX,b.minY,b.minZ); glVertex3f(b.minX,b.maxY,b.minZ);
+    glVertex3f(b.maxX,b.minY,b.minZ); glVertex3f(b.maxX,b.maxY,b.minZ);
+    glVertex3f(b.maxX,b.minY,b.maxZ); glVertex3f(b.maxX,b.maxY,b.maxZ);
+    glVertex3f(b.minX,b.minY,b.maxZ); glVertex3f(b.minX,b.maxY,b.maxZ);
+    glEnd();
+}
+
 int main(int argc, char **argv) {
     if (argc < 2) {
         fprintf(stderr, "Usage: %s data.csv\n", argv[0]);
@@ -82,10 +103,11 @@ int main(int argc, char **argv) {
                      fmaxf(bounds.maxY - bounds.minY,
                            bounds.maxZ - bounds.minZ));
 
-    // Camera offset: place it diagonally above the center
-    float camX = centerX + maxExtent * 0.7f;
-    float camY = centerY + maxExtent * 1.0f; // higher altitude
-    float camZ = centerZ + maxExtent * 0.7f;
+    // Camera offset: move back 2× maxExtent diagonally
+    float camDistance = maxExtent * 2.0f;
+    float camX = centerX + camDistance;
+    float camY = centerY + camDistance;
+    float camZ = centerZ + camDistance;
 
     glfwSetErrorCallback(error_callback);
     if (!glfwInit()) return 1;
@@ -101,7 +123,7 @@ int main(int argc, char **argv) {
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_POINT_SMOOTH);
-    glPointSize(3.0f);
+    glPointSize(5.0f); // larger points
     glClearColor(0.05f, 0.05f, 0.1f, 1.0f);
 
     float angle = 0.0f;
@@ -121,6 +143,10 @@ int main(int argc, char **argv) {
         glRotatef(angle, 0.0f, 1.0f, 0.0f);
         angle += 0.3f;
 
+        // Draw bounding box
+        draw_bounding_box(bounds);
+
+        // Draw points
         glBegin(GL_POINTS);
         for (size_t i = 0; i < point_count; i++) {
             glColor3f(0.7f, 0.8f, 1.0f);

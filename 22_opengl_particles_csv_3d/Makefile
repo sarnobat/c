@@ -41,7 +41,7 @@ else
     endif
 endif
 
-run:
+run:	build
 	./$(BIN) data.csv
 	
 	
