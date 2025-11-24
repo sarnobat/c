@@ -21,14 +21,7 @@ int main(int argc, const char * argv[]) {
         // print("Using:", device)
         printf("Using device: %s\n", [[device name] UTF8String]);
 
-        // Python:
-        // x = torch.tensor(input_list, dtype=torch.float32, device=device)
-        id<MTLCommandQueue> queue = [device newCommandQueue];
-        if (!queue) {
-            printf("Failed to create command queue\n");
-            return 1;
-        }
-        printf("Command queue created.\n");
+
         // -------------------------------------------------- Input
         // Python:
         // input_list = [
@@ -36,84 +29,96 @@ int main(int argc, const char * argv[]) {
         //     1, 1, 0, 0, 1, 0, 1, 0
         // ]
         float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
+        
 
         id<MTLBuffer> dataBuffer;
         {
-            // -------------------------------------------------- Factor
             // Python:
-            // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-            float factor = 3.0f;
-            if (argc > 1) factor = atof(argv[1]);
-            printf("Factor: %.0f\n", factor);
-            // -------------------------------------------------- Kernel
-            // Python:
-            // y = x * factor
-            id<MTLComputePipelineState> pipeline;
-            {
-                NSString *kernelSrc = @
-                "using namespace metal;\n"
-                "kernel void multiply(device float* data [[ buffer(0) ]],\n"
-                "                     device float* factor [[ buffer(1) ]],\n"
-                "                     uint id [[ thread_position_in_grid ]]) {\n"
-                "    if (id < 16) data[id] *= factor[0];\n"
-                "}";
-
-                NSError *error = nil;
-                id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
-                if (!library) {
-                    NSLog(@"Failed to compile kernel: %@", error);
-                    return 1;
-                }
-
-                id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
-                if (!function) {
-                    printf("Failed to get function\n");
-                    return 1;
-                }
-
-                pipeline = [device newComputePipelineStateWithFunction:function error:&error];
-                if (!pipeline) {
-                    NSLog(@"Failed to create pipeline: %@", error);
-                    return 1;
-                }
+            // x = torch.tensor(input_list, dtype=torch.float32, device=device)
+            id<MTLCommandQueue> queue = [device newCommandQueue];
+            if (!queue) {
+                printf("Failed to create command queue\n");
+                return 1;
             }
-            printf("Pipeline created.\n");
+            printf("Command queue created.\n");
 
-            // Python:
-            // x on GPU; buffers correspond to tensor and factor
-            dataBuffer = [device newBufferWithBytes:input_list
-                                                        length:sizeof(input_list)
-                                                        options:MTLResourceStorageModeShared];
             {
-                id<MTLCommandBuffer> commandBuffer;
+                // -------------------------------------------------- Factor
+                // Python:
+                // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+                float factor = 3.0f;
+                if (argc > 1) factor = atof(argv[1]);
+                printf("Factor: %.0f\n", factor);
+                // -------------------------------------------------- Kernel
+                // Python:
+                // y = x * factor
+                id<MTLComputePipelineState> pipeline;
                 {
-                    id<MTLComputeCommandEncoder> encoder;
+                    NSString *kernelSrc = @
+                    "using namespace metal;\n"
+                    "kernel void multiply(device float* data [[ buffer(0) ]],\n"
+                    "                     device float* factor [[ buffer(1) ]],\n"
+                    "                     uint id [[ thread_position_in_grid ]]) {\n"
+                    "    if (id < 16) data[id] *= factor[0];\n"
+                    "}";
+
+                    NSError *error = nil;
+                    id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
+                    if (!library) {
+                        NSLog(@"Failed to compile kernel: %@", error);
+                        return 1;
+                    }
+
+                    id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
+                    if (!function) {
+                        printf("Failed to get function\n");
+                        return 1;
+                    }
+
+                    pipeline = [device newComputePipelineStateWithFunction:function error:&error];
+                    if (!pipeline) {
+                        NSLog(@"Failed to create pipeline: %@", error);
+                        return 1;
+                    }
+                }
+                printf("Pipeline created.\n");
+
+                // Python:
+                // x on GPU; buffers correspond to tensor and factor
+                dataBuffer = [device newBufferWithBytes:input_list
+                                                            length:sizeof(input_list)
+                                                            options:MTLResourceStorageModeShared];
+                {
+                    id<MTLCommandBuffer> commandBuffer;
                     {
-                        commandBuffer = [queue commandBuffer];
-                        encoder = [commandBuffer computeCommandEncoder];
-                        [encoder setComputePipelineState:pipeline];
-                        [encoder setBuffer:dataBuffer offset:0 atIndex:0];
+                        id<MTLComputeCommandEncoder> encoder;
+                        {
+                            commandBuffer = [queue commandBuffer];
+                            encoder = [commandBuffer computeCommandEncoder];
+                            [encoder setComputePipelineState:pipeline];
+                            [encoder setBuffer:dataBuffer offset:0 atIndex:0];
+
+                            {
+                                id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
+                                                                                length:sizeof(float)
+                                                                                options:MTLResourceStorageModeShared];
+                                [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                            }
+                        }
 
                         {
-                            id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
-                                                                            length:sizeof(float)
-                                                                            options:MTLResourceStorageModeShared];
-                            [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                            MTLSize gridSize = MTLSizeMake(16, 1, 1);
+                            NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
+                            if (threadGroupSize > 16) threadGroupSize = 16;
+                            MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
+
+                            [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
                         }
+                        [encoder endEncoding];
                     }
-
-                    {
-                        MTLSize gridSize = MTLSizeMake(16, 1, 1);
-                        NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
-                        if (threadGroupSize > 16) threadGroupSize = 16;
-                        MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
-
-                        [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
-                    }
-                    [encoder endEncoding];
+                    [commandBuffer commit];
+                    [commandBuffer waitUntilCompleted];
                 }
-                [commandBuffer commit];
-                [commandBuffer waitUntilCompleted];
             }
         }
 
