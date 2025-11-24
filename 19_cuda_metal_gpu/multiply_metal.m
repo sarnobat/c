@@ -22,13 +22,6 @@ int main(int argc, const char * argv[]) {
         printf("Using device: %s\n", [[device name] UTF8String]);
 
 
-        // -------------------------------------------------- Input
-        // Python:
-        // input_list = [
-        //     0, 1, 0, 1, 1, 0, 0, 1,
-        //     1, 1, 0, 0, 1, 0, 1, 0
-        // ]
-        float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
         
 
         id<MTLBuffer> dataBuffer;
@@ -43,9 +36,16 @@ int main(int argc, const char * argv[]) {
             printf("Command queue created.\n");
 
             {
-                
-                
-
+                // -------------------------------------------------- Input
+                // Python:
+                // input_list = [
+                //     0, 1, 0, 1, 1, 0, 0, 1,
+                //     1, 1, 0, 0, 1, 0, 1, 0
+                // ]
+                float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
+                printf("Input:  ");
+                for (int i=0; i<16; i++) printf("%d ", (int)input_list[i]);
+                printf("\n");
                 // Python:
                 // x on GPU; buffers correspond to tensor and factor
                 dataBuffer = [device newBufferWithBytes:input_list
@@ -135,8 +135,7 @@ int main(int argc, const char * argv[]) {
         // output_list = y.to("cpu").to(torch.int32).tolist()
         float *output = (float*)[dataBuffer contents];
         // --------------------------------------------------
-        printf("Input:  ");
-        for (int i=0; i<16; i++) printf("%d ", (int)input_list[i]);
+        
         // print("Output:", output_list)
         printf("\nOutput: ");
         for (int i=0; i<16; i++) printf("%d ", (int)output[i]);
