@@ -5,7 +5,7 @@ TARGET = multiply_metal
 SRC = multiply_metal.m   # Objective-C source
 
 # Default factor (can be overridden by make FACTOR=5)
-FACTOR ?= 3
+FACTOR ?= 4
 
 # Default target: build and run
 all: $(TARGET)
