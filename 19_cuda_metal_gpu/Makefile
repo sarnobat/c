@@ -19,3 +19,6 @@ $(TARGET): $(SRC)
 # Clean build artifacts
 clean:
 	@rm -f $(TARGET)
+
+diff:
+	/Volumes/apps/Apps/DiffMerge.app/Contents/MacOS/DiffMerge /Volumes/git/github/depot_parent/python/20_pytorch_or_mac_metal/multiply.py multiply_metal.m

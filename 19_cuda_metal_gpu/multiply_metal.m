@@ -18,6 +18,7 @@ int main(int argc, const char * argv[]) {
             printf("No Metal device found!\n");
             return 1;
         }
+        // print("Using:", device)
         printf("Using device: %s\n", [[device name] UTF8String]);
 
         // Python:
@@ -30,7 +31,10 @@ int main(int argc, const char * argv[]) {
         printf("Command queue created.\n");
 
         // Python:
-        // input_list = [0,1,0,1,1,0,0,1,...]
+        // input_list = [
+        //     0, 1, 0, 1, 1, 0, 0, 1,
+        //     1, 1, 0, 0, 1, 0, 1, 0
+        // ]
         float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
 
         // Python:
@@ -96,11 +100,13 @@ int main(int argc, const char * argv[]) {
         [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
 
+        // # Convert to int before printing
         // Python:
         // output_list = y.to("cpu").to(torch.int32).tolist()
         float *output = (float*)[dataBuffer contents];
         printf("Input:  ");
         for (int i=0; i<16; i++) printf("%d ", (int)input_list[i]);
+        // print("Output:", output_list)
         printf("\nOutput: ");
         for (int i=0; i<16; i++) printf("%d ", (int)output[i]);
         printf("\n");
