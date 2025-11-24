@@ -5,7 +5,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        // === Python equivalent ===
+        // Python:
         // device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
         id<MTLDevice> device = MTLCreateSystemDefaultDevice();
@@ -17,24 +17,27 @@ int main(int argc, const char * argv[]) {
             printf("No Metal device found!\n");
             return 1;
         }
-        printf("Using device: %s\n", [[device name] UTF8String]);
+        printf("Using device: %s\n", [[device name] UTF8String]); // Python: print("Using:", device)
 
-        id<MTLCommandQueue> queue = [device newCommandQueue];
+        id<MTLCommandQueue> queue = [device newCommandQueue]; // Python: x = torch.tensor(..., device=device)
         if (!queue) {
             printf("Failed to create command queue\n");
             return 1;
         }
         printf("Command queue created.\n");
 
-        // === Python input list ===
+        // Python:
+        // input_list = [0,1,0,1,...]
         float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
 
-        // === factor from arg or default 3 ===
+        // Python:
+        // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
         float factor = 3.0f;
         if (argc > 1) factor = atof(argv[1]);
         printf("Factor: %.0f\n", factor);
 
-        // === Inline Metal kernel (string literal) ===
+        // Python:
+        // y = x * factor  (GPU parallel multiply)
         NSString *kernelSrc = @
         "using namespace metal;\n"
         "kernel void multiply(device float* data [[ buffer(0) ]],\n"
@@ -63,7 +66,8 @@ int main(int argc, const char * argv[]) {
         }
         printf("Pipeline created.\n");
 
-        // === Buffers ===
+        // Python:
+        // x on GPU; buffers correspond to tensor and factor
         id<MTLBuffer> dataBuffer = [device newBufferWithBytes:input_list
                                                        length:sizeof(input_list)
                                                       options:MTLResourceStorageModeShared];
@@ -71,7 +75,8 @@ int main(int argc, const char * argv[]) {
                                                          length:sizeof(float)
                                                         options:MTLResourceStorageModeShared];
 
-        // === Encode and run ===
+        // Python:
+        // y = x * factor
         id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
         id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
         [encoder setComputePipelineState:pipeline];
@@ -88,7 +93,8 @@ int main(int argc, const char * argv[]) {
         [commandBuffer commit];
         [commandBuffer waitUntilCompleted];
 
-        // === Print results ===
+        // Python:
+        // output_list = y.to("cpu").to(torch.int32).tolist()
         float *output = (float*)[dataBuffer contents];
         printf("Input:  ");
         for (int i=0; i<16; i++) printf("%d ", (int)input_list[i]);
