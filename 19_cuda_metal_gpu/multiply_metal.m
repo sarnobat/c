@@ -43,12 +43,7 @@ int main(int argc, const char * argv[]) {
             printf("Command queue created.\n");
 
             {
-                // -------------------------------------------------- Factor
-                // Python:
-                // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
-                float factor = 3.0f;
-                if (argc > 1) factor = atof(argv[1]);
-                printf("Factor: %.0f\n", factor);
+                
                 // -------------------------------------------------- Kernel
                 // Python:
                 // y = x * factor
@@ -99,6 +94,13 @@ int main(int argc, const char * argv[]) {
                             [encoder setBuffer:dataBuffer offset:0 atIndex:0];
 
                             {
+                                // -------------------------------------------------- Factor
+                                // Python:
+                                // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+                                // TODO: we can move this to just before we need it
+                                float factor = 3.0f;
+                                if (argc > 1) factor = atof(argv[1]);
+                                printf("Factor: %.0f\n", factor);
                                 id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
                                                                                 length:sizeof(float)
                                                                                 options:MTLResourceStorageModeShared];
