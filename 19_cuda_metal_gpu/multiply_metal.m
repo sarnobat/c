@@ -44,39 +44,7 @@ int main(int argc, const char * argv[]) {
 
             {
                 
-                // -------------------------------------------------- Kernel
-                // Python:
-                // y = x * factor
-                id<MTLComputePipelineState> pipeline;
-                {
-                    NSString *kernelSrc = @
-                    "using namespace metal;\n"
-                    "kernel void multiply(device float* data [[ buffer(0) ]],\n"
-                    "                     device float* factor [[ buffer(1) ]],\n"
-                    "                     uint id [[ thread_position_in_grid ]]) {\n"
-                    "    if (id < 16) data[id] *= factor[0];\n"
-                    "}";
-
-                    NSError *error = nil;
-                    id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
-                    if (!library) {
-                        NSLog(@"Failed to compile kernel: %@", error);
-                        return 1;
-                    }
-
-                    id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
-                    if (!function) {
-                        printf("Failed to get function\n");
-                        return 1;
-                    }
-
-                    pipeline = [device newComputePipelineStateWithFunction:function error:&error];
-                    if (!pipeline) {
-                        NSLog(@"Failed to create pipeline: %@", error);
-                        return 1;
-                    }
-                    printf("Pipeline created.\n");
-                }
+                
 
                 // Python:
                 // x on GPU; buffers correspond to tensor and factor
@@ -86,6 +54,39 @@ int main(int argc, const char * argv[]) {
                 {
                     id<MTLCommandBuffer> commandBuffer;
                     {
+                        // -------------------------------------------------- Kernel
+                        // Python:
+                        // y = x * factor
+                        id<MTLComputePipelineState> pipeline;
+                        {
+                            NSString *kernelSrc = @
+                            "using namespace metal;\n"
+                            "kernel void multiply(device float* data [[ buffer(0) ]],\n"
+                            "                     device float* factor [[ buffer(1) ]],\n"
+                            "                     uint id [[ thread_position_in_grid ]]) {\n"
+                            "    if (id < 16) data[id] *= factor[0];\n"
+                            "}";
+
+                            NSError *error = nil;
+                            id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
+                            if (!library) {
+                                NSLog(@"Failed to compile kernel: %@", error);
+                                return 1;
+                            }
+
+                            id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
+                            if (!function) {
+                                printf("Failed to get function\n");
+                                return 1;
+                            }
+
+                            pipeline = [device newComputePipelineStateWithFunction:function error:&error];
+                            if (!pipeline) {
+                                NSLog(@"Failed to create pipeline: %@", error);
+                                return 1;
+                            }
+                            printf("Pipeline created.\n");
+                        }
                         id<MTLComputeCommandEncoder> encoder;
                         {
                             commandBuffer = [queue commandBuffer];
