@@ -75,8 +75,8 @@ int main(int argc, const char * argv[]) {
                         NSLog(@"Failed to create pipeline: %@", error);
                         return 1;
                     }
+                    printf("Pipeline created.\n");
                 }
-                printf("Pipeline created.\n");
 
                 // Python:
                 // x on GPU; buffers correspond to tensor and factor
