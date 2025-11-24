@@ -46,31 +46,34 @@ int main(int argc, const char * argv[]) {
         // -------------------------------------------------- Kernel
         // Python:
         // y = x * factor
-        NSString *kernelSrc = @
-        "using namespace metal;\n"
-        "kernel void multiply(device float* data [[ buffer(0) ]],\n"
-        "                     device float* factor [[ buffer(1) ]],\n"
-        "                     uint id [[ thread_position_in_grid ]]) {\n"
-        "    if (id < 16) data[id] *= factor[0];\n"
-        "}";
+        id<MTLComputePipelineState> pipeline;
+        {
+            NSString *kernelSrc = @
+            "using namespace metal;\n"
+            "kernel void multiply(device float* data [[ buffer(0) ]],\n"
+            "                     device float* factor [[ buffer(1) ]],\n"
+            "                     uint id [[ thread_position_in_grid ]]) {\n"
+            "    if (id < 16) data[id] *= factor[0];\n"
+            "}";
 
-        NSError *error = nil;
-        id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
-        if (!library) {
-            NSLog(@"Failed to compile kernel: %@", error);
-            return 1;
-        }
+            NSError *error = nil;
+            id<MTLLibrary> library = [device newLibraryWithSource:kernelSrc options:nil error:&error];
+            if (!library) {
+                NSLog(@"Failed to compile kernel: %@", error);
+                return 1;
+            }
 
-        id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
-        if (!function) {
-            printf("Failed to get function\n");
-            return 1;
-        }
+            id<MTLFunction> function = [library newFunctionWithName:@"multiply"];
+            if (!function) {
+                printf("Failed to get function\n");
+                return 1;
+            }
 
-        id<MTLComputePipelineState> pipeline = [device newComputePipelineStateWithFunction:function error:&error];
-        if (!pipeline) {
-            NSLog(@"Failed to create pipeline: %@", error);
-            return 1;
+            pipeline = [device newComputePipelineStateWithFunction:function error:&error];
+            if (!pipeline) {
+                NSLog(@"Failed to create pipeline: %@", error);
+                return 1;
+            }
         }
         printf("Pipeline created.\n");
 
@@ -81,30 +84,32 @@ int main(int argc, const char * argv[]) {
                                                       options:MTLResourceStorageModeShared];
         {
             id<MTLCommandBuffer> commandBuffer;
-            id<MTLComputeCommandEncoder> encoder;
             {
-                commandBuffer = [queue commandBuffer];
-                encoder = [commandBuffer computeCommandEncoder];
-                [encoder setComputePipelineState:pipeline];
-                [encoder setBuffer:dataBuffer offset:0 atIndex:0];
+                id<MTLComputeCommandEncoder> encoder;
+                {
+                    commandBuffer = [queue commandBuffer];
+                    encoder = [commandBuffer computeCommandEncoder];
+                    [encoder setComputePipelineState:pipeline];
+                    [encoder setBuffer:dataBuffer offset:0 atIndex:0];
+
+                    {
+                        id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
+                                                                        length:sizeof(float)
+                                                                        options:MTLResourceStorageModeShared];
+                        [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                    }
+                }
 
                 {
-                    id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
-                                                                    length:sizeof(float)
-                                                                    options:MTLResourceStorageModeShared];
-                    [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                    MTLSize gridSize = MTLSizeMake(16, 1, 1);
+                    NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
+                    if (threadGroupSize > 16) threadGroupSize = 16;
+                    MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
+
+                    [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
                 }
+                [encoder endEncoding];
             }
-
-            {
-                MTLSize gridSize = MTLSizeMake(16, 1, 1);
-                NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
-                if (threadGroupSize > 16) threadGroupSize = 16;
-                MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
-
-                [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
-            }
-            [encoder endEncoding];
             [commandBuffer commit];
             [commandBuffer waitUntilCompleted];
         }
