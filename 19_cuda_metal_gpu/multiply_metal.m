@@ -5,6 +5,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
+
         // Python:
         // device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
@@ -17,9 +18,11 @@ int main(int argc, const char * argv[]) {
             printf("No Metal device found!\n");
             return 1;
         }
-        printf("Using device: %s\n", [[device name] UTF8String]); // Python: print("Using:", device)
+        printf("Using device: %s\n", [[device name] UTF8String]);
 
-        id<MTLCommandQueue> queue = [device newCommandQueue]; // Python: x = torch.tensor(..., device=device)
+        // Python:
+        // x = torch.tensor(input_list, dtype=torch.float32, device=device)
+        id<MTLCommandQueue> queue = [device newCommandQueue];
         if (!queue) {
             printf("Failed to create command queue\n");
             return 1;
@@ -27,7 +30,7 @@ int main(int argc, const char * argv[]) {
         printf("Command queue created.\n");
 
         // Python:
-        // input_list = [0,1,0,1,...]
+        // input_list = [0,1,0,1,1,0,0,1,...]
         float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
 
         // Python:
@@ -37,7 +40,7 @@ int main(int argc, const char * argv[]) {
         printf("Factor: %.0f\n", factor);
 
         // Python:
-        // y = x * factor  (GPU parallel multiply)
+        // y = x * factor
         NSString *kernelSrc = @
         "using namespace metal;\n"
         "kernel void multiply(device float* data [[ buffer(0) ]],\n"
