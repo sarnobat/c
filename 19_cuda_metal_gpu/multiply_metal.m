@@ -83,25 +83,27 @@ int main(int argc, const char * argv[]) {
             id<MTLCommandBuffer> commandBuffer;
             id<MTLComputeCommandEncoder> encoder;
             {
-                
-                
                 commandBuffer = [queue commandBuffer];
                 encoder = [commandBuffer computeCommandEncoder];
                 [encoder setComputePipelineState:pipeline];
                 [encoder setBuffer:dataBuffer offset:0 atIndex:0];
 
-                id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
-                                                                length:sizeof(float)
-                                                                options:MTLResourceStorageModeShared];
-                [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                {
+                    id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
+                                                                    length:sizeof(float)
+                                                                    options:MTLResourceStorageModeShared];
+                    [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                }
             }
 
-            MTLSize gridSize = MTLSizeMake(16, 1, 1);
-            NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
-            if (threadGroupSize > 16) threadGroupSize = 16;
-            MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
+            {
+                MTLSize gridSize = MTLSizeMake(16, 1, 1);
+                NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
+                if (threadGroupSize > 16) threadGroupSize = 16;
+                MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
 
-            [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
+                [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
+            }
             [encoder endEncoding];
             [commandBuffer commit];
             [commandBuffer waitUntilCompleted];
