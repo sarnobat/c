@@ -5,7 +5,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-
+        // --------------------------------------------------
         // Python:
         // device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
         NSArray<id<MTLDevice>> *devices = MTLCopyAllDevices();
@@ -29,7 +29,7 @@ int main(int argc, const char * argv[]) {
             return 1;
         }
         printf("Command queue created.\n");
-
+        // -------------------------------------------------- Input
         // Python:
         // input_list = [
         //     0, 1, 0, 1, 1, 0, 0, 1,
@@ -37,12 +37,13 @@ int main(int argc, const char * argv[]) {
         // ]
         float input_list[16] = {0,1,0,1,1,0,0,1,1,1,0,0,1,0,1,0};
 
+        // -------------------------------------------------- Factor
         // Python:
         // factor = int(sys.argv[1]) if len(sys.argv) > 1 else 3
         float factor = 3.0f;
         if (argc > 1) factor = atof(argv[1]);
         printf("Factor: %.0f\n", factor);
-
+        // -------------------------------------------------- Kernel
         // Python:
         // y = x * factor
         NSString *kernelSrc = @
@@ -78,38 +79,51 @@ int main(int argc, const char * argv[]) {
         id<MTLBuffer> dataBuffer = [device newBufferWithBytes:input_list
                                                        length:sizeof(input_list)
                                                       options:MTLResourceStorageModeShared];
-        id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
-                                                         length:sizeof(float)
-                                                        options:MTLResourceStorageModeShared];
+        {
+            id<MTLCommandBuffer> commandBuffer;
+            id<MTLComputeCommandEncoder> encoder;
+            {
+                
+                
+                commandBuffer = [queue commandBuffer];
+                encoder = [commandBuffer computeCommandEncoder];
+                [encoder setComputePipelineState:pipeline];
+                [encoder setBuffer:dataBuffer offset:0 atIndex:0];
 
-        // Python:
-        // y = x * factor
-        id<MTLCommandBuffer> commandBuffer = [queue commandBuffer];
-        id<MTLComputeCommandEncoder> encoder = [commandBuffer computeCommandEncoder];
-        [encoder setComputePipelineState:pipeline];
-        [encoder setBuffer:dataBuffer offset:0 atIndex:0];
-        [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+                id<MTLBuffer> factorBuffer = [device newBufferWithBytes:&factor
+                                                                length:sizeof(float)
+                                                                options:MTLResourceStorageModeShared];
+                [encoder setBuffer:factorBuffer offset:0 atIndex:1];
+            }
 
-        MTLSize gridSize = MTLSizeMake(16, 1, 1);
-        NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
-        if (threadGroupSize > 16) threadGroupSize = 16;
-        MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
+            MTLSize gridSize = MTLSizeMake(16, 1, 1);
+            NSUInteger threadGroupSize = pipeline.maxTotalThreadsPerThreadgroup;
+            if (threadGroupSize > 16) threadGroupSize = 16;
+            MTLSize threadsPerGroup = MTLSizeMake(threadGroupSize, 1, 1);
 
-        [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
-        [encoder endEncoding];
-        [commandBuffer commit];
-        [commandBuffer waitUntilCompleted];
+            [encoder dispatchThreads:gridSize threadsPerThreadgroup:threadsPerGroup];
+            [encoder endEncoding];
+            [commandBuffer commit];
+            [commandBuffer waitUntilCompleted];
+        }
 
-        // # Convert to int before printing
+        // -------------------------------------------------- Result
+        // Convert to int before printing
+        // (-) Move the tensor from GPU memory to CPU memory
+        //     (because most Python operations (like list() or printing) cannot directly access GPU memory.)
+        // (-) Change the data type of the tensor from float32 to int32.
+        //     (because your original tensor is floating-point because GPU operations often prefer floats, but you want integer outputs like your Python list of 0s and 1s multiplied by the factor.)
         // Python:
         // output_list = y.to("cpu").to(torch.int32).tolist()
         float *output = (float*)[dataBuffer contents];
+        // --------------------------------------------------
         printf("Input:  ");
         for (int i=0; i<16; i++) printf("%d ", (int)input_list[i]);
         // print("Output:", output_list)
         printf("\nOutput: ");
         for (int i=0; i<16; i++) printf("%d ", (int)output[i]);
         printf("\n");
+        // --------------------------------------------------
     }
     return 0;
 }

@@ -21,4 +21,7 @@ clean:
 	@rm -f $(TARGET)
 
 diff:
-	/Volumes/apps/Apps/DiffMerge.app/Contents/MacOS/DiffMerge /Volumes/git/github/depot_parent/python/20_pytorch_or_mac_metal/multiply.py multiply_metal.m
+	# not as useful as I was hoping
+	# /Volumes/apps/Apps/DiffMerge.app/Contents/MacOS/DiffMerge /Volumes/git/github/depot_parent/python/20_pytorch_or_mac_metal/multiply.py multiply_metal.m
+# 	Doesn't work: cd /Volumes/git/github/depot_parent/python/20_pytorch && make diff
+
