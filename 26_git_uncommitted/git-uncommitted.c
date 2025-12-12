@@ -7,10 +7,13 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 
-/* ANSI colors (same palette as git log) */
-#define C_CYAN   "\033[36m"
-#define C_YELLOW "\033[33m"
-#define C_RESET  "\033[0m"
+/* ANSI colors (matching git defaults) */
+#define C_CYAN    "\033[36m"
+#define C_YELLOW  "\033[33m"
+#define C_MAGENTA "\033[35m"
+#define C_GREEN   "\033[32m"
+#define C_RED     "\033[31m"
+#define C_RESET   "\033[0m"
 
 /* ------------------------------------------------------------ */
 /* helpers                                                      */
@@ -122,30 +125,100 @@ static int branch_ahead_of_upstream(const char *dir) {
 static int get_last_commit(const char *dir,
                            char *buf,
                            size_t bufsz) {
-    /*
-     * %h short hash
-     * %cd committer date (short, YYYY-MM-DD)
-     * %s subject
-     */
     char *cmd[] = {
         "git", "log", "-1",
         "--date=short",
-        "--pretty=format:%h %cd %s",
+        "--pretty=format:%h %cd %s|%an",
         NULL
     };
 
     return git_cmd_capture(dir, cmd, buf, bufsz);
 }
 
+static void get_refs_at_head(const char *dir,
+                             char *out,
+                             size_t outsz) {
+    out[0] = '\0';
+    char buf[1024];
+    bool first = true;
+
+#define ADD_REF(r) do { \
+    if (!first) strncat(out, ", ", outsz - strlen(out) - 1); \
+    strncat(out, r, outsz - strlen(out) - 1); \
+    first = false; \
+} while (0)
+
+    ADD_REF("HEAD");
+
+    char *branches[] = {
+        "git", "branch", "--all",
+        "--points-at", "HEAD",
+        "--format=%(refname:short)",
+        NULL
+    };
+
+    if (git_cmd_capture(dir, branches, buf, sizeof(buf)) == 0) {
+        char *line = strtok(buf, "\n");
+        while (line) {
+            ADD_REF(line);
+            line = strtok(NULL, "\n");
+        }
+    }
+
+    char *tags[] = {
+        "git", "tag", "--points-at", "HEAD", NULL
+    };
+
+    if (git_cmd_capture(dir, tags, buf, sizeof(buf)) == 0) {
+        char *line = strtok(buf, "\n");
+        while (line) {
+            ADD_REF(line);
+            line = strtok(NULL, "\n");
+        }
+    }
+
+#undef ADD_REF
+}
+
+static void get_unstaged_summary(const char *dir,
+                                 int *m, int *a, int *u) {
+    *m = *a = *u = 0;
+
+    char buf[4096];
+    char *cmd[] = {
+        "git", "status", "--porcelain", NULL
+    };
+
+    if (git_cmd_capture(dir, cmd, buf, sizeof(buf)) != 0)
+        return;
+
+    for (char *line = strtok(buf, "\n"); line; line = strtok(NULL, "\n")) {
+        if (line[0] == '?' && line[1] == '?') {
+            (*u)++;
+        } else if (line[1] == 'M') {
+            (*m)++;
+        } else if (line[1] == 'A') {
+            (*a)++;
+        }
+    }
+}
+
 /* ------------------------------------------------------------ */
 
 int main(int argc, char **argv) {
     bool long_mode = false;
+    int path_cols = 50;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-l") == 0 ||
             strcmp(argv[i], "--long") == 0) {
             long_mode = true;
+        } else if ((strcmp(argv[i], "-c") == 0 ||
+                    strcmp(argv[i], "--columns") == 0) &&
+                   i + 1 < argc) {
+            path_cols = atoi(argv[++i]);
+            if (path_cols <= 0)
+                path_cols = 50;
         }
     }
 
@@ -159,34 +232,74 @@ int main(int argc, char **argv) {
         if (!is_git_repo(dir))
             continue;
 
-        if (!has_unstaged_changes(dir) &&
-            !branch_ahead_of_upstream(dir))
+        int dirty = has_unstaged_changes(dir);
+        int ahead = branch_ahead_of_upstream(dir);
+
+        if (!dirty && !ahead)
             continue;
 
         if (!long_mode) {
             printf("%s\n", dir);
+            continue;
+        }
+
+        char info[1024];
+        if (get_last_commit(dir, info, sizeof(info)) != 0)
+            continue;
+
+        char hash[64], date[32];
+        char *msg, *author;
+
+        if (sscanf(info, "%63s %31s", hash, date) != 2)
+            continue;
+
+        msg = info + strlen(hash) + 1 + strlen(date) + 1;
+        author = strchr(msg, '|');
+        if (author) {
+            *author = '\0';
+            author++;
         } else {
-            char info[1024];
-            if (get_last_commit(dir, info, sizeof(info)) == 0) {
-                /*
-                 * Split "<hash> <date> <message>"
-                 */
-                char hash[64], date[32];
-                const char *msg = "";
+            author = "";
+        }
 
-                if (sscanf(info, "%63s %31s", hash, date) == 2) {
-                    msg = info + strlen(hash) + 1 + strlen(date) + 1;
-                }
+        char refs[1024];
+        get_refs_at_head(dir, refs, sizeof(refs));
 
-                printf("%-60s "
-                       C_CYAN "%s" C_RESET " "
-                       C_YELLOW "%s" C_RESET " "
-                       "%s\n",
-                       dir, hash, date, msg);
-            } else {
-                printf("%-60s <no commits>\n", dir);
+        printf("%-*s "
+               C_CYAN "%s" C_RESET " "
+               C_YELLOW "%s" C_RESET " "
+               "%s "
+               C_MAGENTA "%s" C_RESET " "
+               C_GREEN "(%s)" C_RESET,
+               path_cols, dir,
+               hash, date, msg, author, refs);
+
+        if (dirty) {
+            int m, a, u;
+            get_unstaged_summary(dir, &m, &a, &u);
+
+            bool first = true;
+            printf("  ");
+
+            if (m > 0) {
+                printf(C_RED "M" C_RESET " %d file%s",
+                       m, m == 1 ? "" : "s");
+                first = false;
+            }
+            if (a > 0) {
+                if (!first) printf(", ");
+                printf(C_RED "A" C_RESET " %d file%s",
+                       a, a == 1 ? "" : "s");
+                first = false;
+            }
+            if (u > 0) {
+                if (!first) printf(", ");
+                printf(C_RED "??" C_RESET " %d file%s",
+                       u, u == 1 ? "" : "s");
             }
         }
+
+        printf("\n");
     }
 
     return 0;

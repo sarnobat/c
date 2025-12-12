@@ -5,7 +5,10 @@ SRC     := git-uncommitted.c
 
 .PHONY: all clean
 
-all: $(TARGET)
+all: $(TARGET) test
+
+test:
+	ls -d /Volumes/git/github/*  | ./git-uncommitted --long
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $<
