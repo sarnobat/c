@@ -5,11 +5,12 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stdbool.h>
 
-/*
- * Run a git command silently (stdout/stderr -> /dev/null).
- * Returns raw wait status.
- */
+/* ------------------------------------------------------------ */
+/* helpers                                                      */
+/* ------------------------------------------------------------ */
+
 static int git_cmd_silent(const char *dir, char *const argv[]) {
     pid_t pid = fork();
     if (pid == 0) {
@@ -32,13 +33,10 @@ static int git_cmd_silent(const char *dir, char *const argv[]) {
     return status;
 }
 
-/*
- * Run a git command and capture stdout into buf.
- * buf is always NUL-terminated on success.
- * Returns 0 on success, nonzero otherwise.
- */
-static int git_cmd_capture(const char *dir, char *const argv[],
-                           char *buf, size_t bufsz) {
+static int git_cmd_capture(const char *dir,
+                           char *const argv[],
+                           char *buf,
+                           size_t bufsz) {
     int pipefd[2];
     if (pipe(pipefd) != 0)
         return 1;
@@ -76,9 +74,13 @@ static int git_cmd_capture(const char *dir, char *const argv[],
     return (WIFEXITED(status) && WEXITSTATUS(status) == 0) ? 0 : 1;
 }
 
+/* ------------------------------------------------------------ */
+/* git predicates                                               */
+/* ------------------------------------------------------------ */
+
 static int is_git_repo(const char *dir) {
     char *cmd[] = {
-        "git", "rev-parse", "--is-inside-work-tree", NULL
+        "git", "rev-parse", "--is-inside-work-tree", "--quiet", NULL
     };
     int st = git_cmd_silent(dir, cmd);
     return WIFEXITED(st) && WEXITSTATUS(st) == 0;
@@ -93,17 +95,13 @@ static int has_unstaged_changes(const char *dir) {
 }
 
 static int branch_ahead_of_upstream(const char *dir) {
-    /*
-     * git rev-list --left-right --count @{u}...HEAD
-     * Output: "<behind> <ahead>\n"
-     */
     char *cmd[] = {
         "git", "rev-list", "--left-right", "--count", "@{u}...HEAD", NULL
     };
 
     char buf[128];
     if (git_cmd_capture(dir, cmd, buf, sizeof(buf)) != 0)
-        return 0; /* no upstream or error */
+        return 0;
 
     int behind = 0, ahead = 0;
     if (sscanf(buf, "%d %d", &behind, &ahead) != 2)
@@ -112,7 +110,39 @@ static int branch_ahead_of_upstream(const char *dir) {
     return ahead > 0;
 }
 
-int main(void) {
+/* ------------------------------------------------------------ */
+/* git info                                                     */
+/* ------------------------------------------------------------ */
+
+static int get_last_commit(const char *dir,
+                           char *buf,
+                           size_t bufsz) {
+    /*
+     * %h  short hash
+     * %cI committer date, strict ISO 8601
+     * %s  subject
+     */
+    char *cmd[] = {
+        "git", "log", "-1",
+        "--pretty=format:%h %cI %s",
+        NULL
+    };
+
+    return git_cmd_capture(dir, cmd, buf, bufsz);
+}
+
+/* ------------------------------------------------------------ */
+
+int main(int argc, char **argv) {
+    bool long_mode = false;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-l") == 0 ||
+            strcmp(argv[i], "--long") == 0) {
+            long_mode = true;
+        }
+    }
+
     char dir[4096];
 
     while (fgets(dir, sizeof(dir), stdin)) {
@@ -123,9 +153,20 @@ int main(void) {
         if (!is_git_repo(dir))
             continue;
 
-        if (has_unstaged_changes(dir) ||
-            branch_ahead_of_upstream(dir)) {
+        if (!has_unstaged_changes(dir) &&
+            !branch_ahead_of_upstream(dir))
+            continue;
+
+        if (!long_mode) {
             printf("%s\n", dir);
+        } else {
+            char info[1024];
+            if (get_last_commit(dir, info, sizeof(info)) == 0) {
+                printf("%-60s %s\n", dir, info);
+            } else {
+                /* fallback if git log fails */
+                printf("%-60s <no commits>\n", dir);
+            }
         }
     }
 
