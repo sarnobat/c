@@ -1,0 +1,1 @@
+/Volumes/git/computers.git/2024/common/bin/c_hello_world_generate.sh
