@@ -7,6 +7,11 @@
 #include <sys/wait.h>
 #include <stdbool.h>
 
+/* ANSI colors (same palette as git log) */
+#define C_CYAN   "\033[36m"
+#define C_YELLOW "\033[33m"
+#define C_RESET  "\033[0m"
+
 /* ------------------------------------------------------------ */
 /* helpers                                                      */
 /* ------------------------------------------------------------ */
@@ -118,13 +123,14 @@ static int get_last_commit(const char *dir,
                            char *buf,
                            size_t bufsz) {
     /*
-     * %h  short hash
-     * %cI committer date, strict ISO 8601
-     * %s  subject
+     * %h short hash
+     * %cd committer date (short, YYYY-MM-DD)
+     * %s subject
      */
     char *cmd[] = {
         "git", "log", "-1",
-        "--pretty=format:%h %cI %s",
+        "--date=short",
+        "--pretty=format:%h %cd %s",
         NULL
     };
 
@@ -162,9 +168,22 @@ int main(int argc, char **argv) {
         } else {
             char info[1024];
             if (get_last_commit(dir, info, sizeof(info)) == 0) {
-                printf("%-60s %s\n", dir, info);
+                /*
+                 * Split "<hash> <date> <message>"
+                 */
+                char hash[64], date[32];
+                const char *msg = "";
+
+                if (sscanf(info, "%63s %31s", hash, date) == 2) {
+                    msg = info + strlen(hash) + 1 + strlen(date) + 1;
+                }
+
+                printf("%-60s "
+                       C_CYAN "%s" C_RESET " "
+                       C_YELLOW "%s" C_RESET " "
+                       "%s\n",
+                       dir, hash, date, msg);
             } else {
-                /* fallback if git log fails */
                 printf("%-60s <no commits>\n", dir);
             }
         }
