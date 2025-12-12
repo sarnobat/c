@@ -1,20 +1,14 @@
 CC      ?= cc
 CFLAGS  ?= -O2 -Wall -Wextra -std=c11
-LDFLAGS ?=
-
-TARGET  := git_unstaged_loop
-SRC     := git_unstaged_loop.c
-OBJ     := $(SRC:.c=.o)
+TARGET  := git-uncommitted
+SRC     := git-uncommitted.c
 
 .PHONY: all clean
 
 all: $(TARGET)
 
-$(TARGET): $(OBJ)
-	$(CC) $(LDFLAGS) -o $@ $^
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+$(TARGET): $(SRC)
+	$(CC) $(CFLAGS) -o $@ $<
 
 clean:
-	rm -f $(TARGET) $(OBJ)
+	rm -f $(TARGET)
