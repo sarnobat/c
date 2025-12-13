@@ -8,7 +8,11 @@ SRC     := git-uncommitted.c
 all: $(TARGET) test
 
 test:
-	ls -d /Volumes/git/github/*  | ./git-uncommitted --long
+	ls -d \
+		/Volumes/git/github/* \
+		/Volumes/git/github/depot_parent/* \
+		/Volumes/git/2023/repos_personal.git/* \
+		| ./git-uncommitted --long
 
 $(TARGET): $(SRC)
 	$(CC) $(CFLAGS) -o $@ $<
