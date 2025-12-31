@@ -1,11 +1,27 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+static int sockfd = -1;
+
+static void cleanup(void) {
+    if (sockfd >= 0) {
+        close(sockfd);
+        sockfd = -1;
+    }
+}
+
+static void handle_signal(int sig) {
+    (void)sig;
+    cleanup();
+    _exit(EXIT_FAILURE);
+}
 
 static void usage(const char *prog_name) {
     fprintf(stderr, "Usage: %s <host> <port> <message>\n", prog_name);
@@ -49,7 +65,13 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    int sockfd = connect_to_host(argv[1], argv[2]);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    sockfd = connect_to_host(argv[1], argv[2]);
     if (sockfd < 0) {
         return EXIT_FAILURE;
     }
@@ -58,10 +80,10 @@ int main(int argc, char *argv[]) {
     ssize_t bytes_sent = send(sockfd, argv[3], msg_len, 0);
     if (bytes_sent < 0 || (size_t)bytes_sent != msg_len) {
         perror("send");
-        close(sockfd);
+        cleanup();
         return EXIT_FAILURE;
     }
 
-    close(sockfd);
+    cleanup();
     return EXIT_SUCCESS;
 }

@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,6 +8,26 @@
 #include <unistd.h>
 
 #define BUFFER_SIZE 1024
+
+static int server_fd = -1;
+static int client_fd = -1;
+
+static void cleanup(void) {
+    if (client_fd >= 0) {
+        close(client_fd);
+        client_fd = -1;
+    }
+    if (server_fd >= 0) {
+        close(server_fd);
+        server_fd = -1;
+    }
+}
+
+static void handle_signal(int sig) {
+    (void)sig;
+    cleanup();
+    _exit(EXIT_FAILURE);
+}
 
 static void usage(const char *prog_name) {
     fprintf(stderr, "Usage: %s <port>\n", prog_name);
@@ -25,7 +46,13 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    int server_fd = socket(AF_INET, SOCK_STREAM, 0);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = handle_signal;
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+
+    server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
         perror("socket");
         return EXIT_FAILURE;
@@ -58,10 +85,10 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
         perror("accept");
-        close(server_fd);
+        cleanup();
         return EXIT_FAILURE;
     }
 
@@ -82,7 +109,6 @@ int main(int argc, char *argv[]) {
         putchar('\n');
     }
 
-    close(client_fd);
-    close(server_fd);
+    cleanup();
     return (bytes_read < 0) ? EXIT_FAILURE : EXIT_SUCCESS;
 }

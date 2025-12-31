@@ -1,9 +1,15 @@
 CC ?= cc
 CFLAGS ?= -Wall -Wextra -O2
 LDFLAGS ?=
-PORT ?= 5000
+PORT ?= 5111
 
 BIN := sender receiver
+
+.PHONY: run
+run: receiver
+	@echo 'In another tab, run'
+	@echo `realpath sender`' 127.0.0.1 $(PORT) "type your message here"'
+	./receiver $(PORT)
 
 all: $(BIN)
 
@@ -13,10 +19,6 @@ sender: sender.c
 receiver: receiver.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)
 
-.PHONY: run
-run: receiver
-	@echo 'In another tab, run "./sender 127.0.0.1 $(PORT) \"type your message here\""'
-	./receiver $(PORT)
 
 .PHONY: clean
 clean:
