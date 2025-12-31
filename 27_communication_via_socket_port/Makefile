@@ -8,10 +8,12 @@ BIN := sender receiver
 .PHONY: run
 run: receiver
 	@echo 'In another tab, run'
-	@echo `realpath sender`' 127.0.0.1 $(PORT) "type your message here"'
+	@echo `realpath sender`' 127.0.0.1 $(PORT) ""'
 	./receiver $(PORT)
 
-all: $(BIN)
+all:	build
+
+build: $(BIN)
 
 sender: sender.c
 	$(CC) $(CFLAGS) -o $@ $< $(LDFLAGS)

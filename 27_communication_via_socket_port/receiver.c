@@ -85,30 +85,33 @@ int main(int argc, char *argv[]) {
 
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
-    client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
-    if (client_fd < 0) {
-        perror("accept");
-        cleanup();
-        return EXIT_FAILURE;
-    }
+    for (;;) {
+        client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+        if (client_fd < 0) {
+            perror("accept");
+            cleanup();
+            return EXIT_FAILURE;
+        }
 
-    char buffer[BUFFER_SIZE];
-    ssize_t bytes_read;
-    int saw_data = 0;
-    char last_char = '\0';
-    while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
-        saw_data = 1;
-        last_char = buffer[bytes_read - 1];
-        buffer[bytes_read] = '\0';
-        fputs(buffer, stdout);
-    }
+        char buffer[BUFFER_SIZE];
+        ssize_t bytes_read;
+        int saw_data = 0;
+        char last_char = '\0';
+        while ((bytes_read = recv(client_fd, buffer, sizeof(buffer) - 1, 0)) > 0) {
+            saw_data = 1;
+            last_char = buffer[bytes_read - 1];
+            buffer[bytes_read] = '\0';
+            fputs(buffer, stdout);
+        }
 
-    if (bytes_read < 0) {
-        perror("recv");
-    } else if (saw_data && last_char != '\n') {
-        putchar('\n');
-    }
+        if (bytes_read < 0) {
+            perror("recv");
+        } else if (saw_data && last_char != '\n') {
+            putchar('\n');
+        }
 
-    cleanup();
-    return (bytes_read < 0) ? EXIT_FAILURE : EXIT_SUCCESS;
+        close(client_fd);
+        client_fd = -1;
+        fflush(stdout);
+    }
 }
