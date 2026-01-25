@@ -1,0 +1,16 @@
+=== Metal Hello Debug ===
+MTLCopyAllDevices() -> 1 device(s)
+  [0] Apple M3 Max
+       lowPower: no  removable: no  headless: no
+       registryID: 0x1000004f7
+⚙️  MTLCreateSystemDefaultDevice() returned nil; falling back to first enumerated device.
+✅ Using device: Apple M3 Max
+✅ Command queue created.
+✅ Library loaded successfully.
+✅ Kernel function 'hello' found.
+✅ Compute pipeline ready.
+✅ Shared buffer created (256 bytes).
+🚀 Dispatching GPU work...
+✅ GPU work completed.
+Result buffer: "Hello from Metal (C host)!"
+=== Metal Hello Complete ===
