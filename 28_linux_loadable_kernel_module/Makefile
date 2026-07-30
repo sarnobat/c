@@ -4,7 +4,7 @@ obj-m += count_user_processes_lkm.o
 .PHONY: all build check-linux setup install uninstall reload test clean
 
 all: build
-	@echo "next thing to learn: bpftrace one-liners using kernel tracepoints (instead of kernel module)"
+	@echo "now run make install"
 
 build: hello_lkm.ko count_user_processes_lkm.ko
 
@@ -28,6 +28,7 @@ install: check-linux hello_lkm.ko count_user_processes_lkm.ko
 	@lsmod | grep -q '^count_user_processes_lkm\b' && { echo "count_user_processes_lkm is already loaded; unloading it first."; sudo rmmod count_user_processes_lkm; } || true
 	sudo insmod count_user_processes_lkm.ko
 	@echo "Loaded hello_lkm and count_user_processes_lkm. Check dmesg with: sudo dmesg | tail"
+	@echo "now run make test"
 
 uninstall: check-linux
 	sudo rmmod hello_lkm
@@ -36,8 +37,9 @@ uninstall: check-linux
 reload: install
 
 test: install
-	sudo dmesg | grep 'SRIDHAR .*hello_lkm' | tail -20
-	sudo dmesg | grep 'SRIDHAR .*count_user_processes_lkm' | tail -20
+	sudo dmesg | grep 'SRIDHAR .*hello_lkm' | tail -5
+	sudo dmesg | grep 'SRIDHAR .*count_user_processes_lkm' | tail -5
+	@echo "next thing to learn: bpftrace one-liners using kernel tracepoints (instead of kernel module)"
 
 clean:
 	make -C /lib/modules/`uname -r`/build M=`pwd` clean
