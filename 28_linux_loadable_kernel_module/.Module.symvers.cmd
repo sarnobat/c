@@ -1,1 +1,0 @@
-savedcmd_/media/sarnobat/git/github/depot_parent/c/28_linux_loadable_kernel_module/Module.symvers :=  scripts/mod/modpost -M -m -a      -o /media/sarnobat/git/github/depot_parent/c/28_linux_loadable_kernel_module/Module.symvers -T /media/sarnobat/git/github/depot_parent/c/28_linux_loadable_kernel_module/modules.order -i Module.symvers -e 
