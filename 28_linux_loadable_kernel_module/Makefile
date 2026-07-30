@@ -3,6 +3,7 @@ obj-m := hello_lkm.o
 .PHONY: all build check-linux setup install uninstall reload test clean
 
 all: build
+	@echo "next thing to learn: bpftrace one-liners using kernel tracepoints (instead of kernel module)"
 
 build: hello_lkm.ko
 
