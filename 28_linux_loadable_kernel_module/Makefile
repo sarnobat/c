@@ -1,9 +1,9 @@
 obj-m := hello_lkm.o
 obj-m += count_user_processes_lkm.o
 
-.PHONY: all build check-linux setup install uninstall reload test clean
+.PHONY: all build check-linux setup install uninstall reload test clean-intermediates clean
 
-all: build
+all: build clean-intermediates
 	@echo "now run make install"
 
 build: hello_lkm.ko count_user_processes_lkm.ko
@@ -40,6 +40,11 @@ test: install
 	sudo dmesg | grep 'SRIDHAR .*hello_lkm' | tail -5
 	sudo dmesg | grep 'SRIDHAR .*count_user_processes_lkm' | tail -5
 	@echo "next thing to learn: bpftrace one-liners using kernel tracepoints (instead of kernel module)"
+
+clean-intermediates:
+	rm -f hello_lkm.o hello_lkm.mod hello_lkm.mod.c hello_lkm.mod.o .hello_lkm.o.cmd .hello_lkm.mod.cmd .hello_lkm.mod.o.cmd .hello_lkm.ko.cmd
+	rm -f count_user_processes_lkm.o count_user_processes_lkm.mod count_user_processes_lkm.mod.c count_user_processes_lkm.mod.o .count_user_processes_lkm.o.cmd .count_user_processes_lkm.mod.cmd .count_user_processes_lkm.mod.o.cmd .count_user_processes_lkm.ko.cmd
+	rm -f Module.symvers modules.order .Module.symvers.cmd .modules.order.cmd
 
 clean:
 	make -C /lib/modules/`uname -r`/build M=`pwd` clean
