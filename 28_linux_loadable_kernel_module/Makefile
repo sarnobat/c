@@ -7,7 +7,7 @@ all: build
 
 build: hello_lkm.ko
 
-hello_lkm.ko: hello_lkm.c
+hello_lkm.ko: hello_lkm.c Makefile
 	make -C /lib/modules/`uname -r`/build M=`pwd` modules
 
 check-linux:
